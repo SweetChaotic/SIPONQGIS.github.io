@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+            body {
+                background-image: url('E:\OTH\BCVB.png');
+                background-size: cover;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-image: linear-gradient(45deg, #ececec, #ffffff);
+            }
+            h1 {
+                font-family: Helvetica, sans-serif;
+                text-align: left;
+             }
+            #header {
+                background: linear-gradient(to right, #00c3ff, #007ffd);
+                color: rgb(255, 255, 255);
+                padding: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-family: Helvetica, sans-serif;
+                border-top-left-radius: 15px;
+                border-top-right-radius: 15px;
+                margin-left: 0,5%;
+                margin-right: 0,5%;
+            }
+            #logo {
+                width: auto ;
+                height: 50px ;
+                margin-left: 20px;
+            }
+            #menu {
+                margin-right: 20px;
+                font-family: Helvetica, sans-serif;
+                color: rgb(255, 255, 255);
+                width: 30px ;
+                height: auto;
+            }
+            #map {
+                height: 500px;
+                width: 80%;
+                margin: 0 auto; 
+                margin-left: 0,5%; 
+                margin-right: 0,5%;
+            }
+            #map-container {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            #info-panel {
+                width: 20%;
+                background-color: rgba(255, 255, 255, 0.8);
+                padding: 20px;
+                border-radius: 10px;
+                margin-left: 0px;
+                font-family: helvetica, sans-serif;
+            }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="header">
+            <img id="logo" src="D:\SMSTR 6\SELO6 ALT\DTB AST\aksara.png" alt="Logo">
+            <h1>Sistem Informasi Pertanahan</h1>
+            <div id="menu">
+                <!-- <a href="#">Menu</a> -->
+                <img id="menu" src="C:\xampp\htdocs\img\menutomb.png" alt="Logo">
+            </div>
+        </div>
+        <!-- <h1>Sistem Informasi Pertanahan</h1> -->
+        
+        <div id="map-container">
+            <div id="info-panel">
+                <h2>Sistem Informasi Pertanahan</h2>
+                <p>Peta Bidang Tanah WP Kawasan Perkotaan Selomerto</p>
+                <div id="feature-info"></div>
+            </div>
+            <div id="map"></div>
+        </div> 
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="data/ADM_DESA_SELO_2.js"></script>
+        <script src="data/ADM_PERKOTAAN11_SELO_3.js"></script>
+        <script src="data/PersilWPSelomertoPenggunaanTanah_4.js"></script>
+        <script>
+        
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[-7.45925277896106,109.84038104144176],[-7.376784176437658,109.96579555773206]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleHybrid_0');
+        map.getPane('pane_GoogleHybrid_0').style.zIndex = 400;
+        var layer_GoogleHybrid_0 = L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleHybrid_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_GoogleHybrid_0;
+        map.addLayer(layer_GoogleHybrid_0);
+        map.createPane('pane_OpenStreetMap_1');
+        map.getPane('pane_OpenStreetMap_1').style.zIndex = 401;
+        var layer_OpenStreetMap_1 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_1',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OpenStreetMap_1;
+        map.addLayer(layer_OpenStreetMap_1);
+        function pop_ADM_DESA_SELO_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROVINSI'] !== null ? autolinker.link(feature.properties['PROVINSI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['KABUPATEN'] !== null ? autolinker.link(feature.properties['KABUPATEN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['KECAMATAN'] !== null ? autolinker.link(feature.properties['KECAMATAN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DESA'] !== null ? autolinker.link(feature.properties['DESA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SUMBER'] !== null ? autolinker.link(feature.properties['SUMBER'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['luas_ha'] !== null ? autolinker.link(feature.properties['luas_ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['luas_km'] !== null ? autolinker.link(feature.properties['luas_km'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_ADM_DESA_SELO_2_0() {
+            return {
+                pane: 'pane_ADM_DESA_SELO_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,217,217,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_ADM_DESA_SELO_2');
+        map.getPane('pane_ADM_DESA_SELO_2').style.zIndex = 402;
+        map.getPane('pane_ADM_DESA_SELO_2').style['mix-blend-mode'] = 'normal';
+        var layer_ADM_DESA_SELO_2 = new L.geoJson(json_ADM_DESA_SELO_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ADM_DESA_SELO_2',
+            layerName: 'layer_ADM_DESA_SELO_2',
+            pane: 'pane_ADM_DESA_SELO_2',
+            onEachFeature: pop_ADM_DESA_SELO_2,
+            style: style_ADM_DESA_SELO_2_0,
+        });
+        bounds_group.addLayer(layer_ADM_DESA_SELO_2);
+        map.addLayer(layer_ADM_DESA_SELO_2);
+        function pop_ADM_PERKOTAAN11_SELO_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROVINSI'] !== null ? autolinker.link(feature.properties['PROVINSI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['KABUPATEN'] !== null ? autolinker.link(feature.properties['KABUPATEN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['KECAMATAN'] !== null ? autolinker.link(feature.properties['KECAMATAN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DESA'] !== null ? autolinker.link(feature.properties['DESA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SUMBER'] !== null ? autolinker.link(feature.properties['SUMBER'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['status'] !== null ? autolinker.link(feature.properties['status'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SWP'] !== null ? autolinker.link(feature.properties['SWP'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['BLOK'] !== null ? autolinker.link(feature.properties['BLOK'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Luas_Ha'] !== null ? autolinker.link(feature.properties['Luas_Ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_ADM_PERKOTAAN11_SELO_3_0() {
+            return {
+                pane: 'pane_ADM_PERKOTAAN11_SELO_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(37,142,190,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_ADM_PERKOTAAN11_SELO_3');
+        map.getPane('pane_ADM_PERKOTAAN11_SELO_3').style.zIndex = 403;
+        map.getPane('pane_ADM_PERKOTAAN11_SELO_3').style['mix-blend-mode'] = 'normal';
+        var layer_ADM_PERKOTAAN11_SELO_3 = new L.geoJson(json_ADM_PERKOTAAN11_SELO_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ADM_PERKOTAAN11_SELO_3',
+            layerName: 'layer_ADM_PERKOTAAN11_SELO_3',
+            pane: 'pane_ADM_PERKOTAAN11_SELO_3',
+            onEachFeature: pop_ADM_PERKOTAAN11_SELO_3,
+            style: style_ADM_PERKOTAAN11_SELO_3_0,
+        });
+        bounds_group.addLayer(layer_ADM_PERKOTAAN11_SELO_3);
+        map.addLayer(layer_ADM_PERKOTAAN11_SELO_3);
+        function pop_PersilWPSelomertoPenggunaanTanah_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['luas'] !== null ? autolinker.link(feature.properties['luas'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['nib'] !== null ? autolinker.link(feature.properties['nib'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['nomor'] !== null ? autolinker.link(feature.properties['nomor'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['persilpasi'] !== null ? autolinker.link(feature.properties['persilpasi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['tahun'] !== null ? autolinker.link(feature.properties['tahun'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['tipehak'] !== null ? autolinker.link(feature.properties['tipehak'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['alatukur'] !== null ? autolinker.link(feature.properties['alatukur'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['tataguna'] !== null ? autolinker.link(feature.properties['tataguna'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['GUNATANAH'] !== null ? autolinker.link(feature.properties['GUNATANAH'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAMAOBJ'] !== null ? autolinker.link(feature.properties['NAMAOBJ'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_PersilWPSelomertoPenggunaanTanah_4_0() {
+            return {
+                pane: 'pane_PersilWPSelomertoPenggunaanTanah_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,217,1,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PersilWPSelomertoPenggunaanTanah_4');
+        map.getPane('pane_PersilWPSelomertoPenggunaanTanah_4').style.zIndex = 404;
+        map.getPane('pane_PersilWPSelomertoPenggunaanTanah_4').style['mix-blend-mode'] = 'normal';
+        var layer_PersilWPSelomertoPenggunaanTanah_4 = new L.geoJson(json_PersilWPSelomertoPenggunaanTanah_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PersilWPSelomertoPenggunaanTanah_4',
+            layerName: 'layer_PersilWPSelomertoPenggunaanTanah_4',
+            pane: 'pane_PersilWPSelomertoPenggunaanTanah_4',
+            onEachFeature: pop_PersilWPSelomertoPenggunaanTanah_4,
+            style: style_PersilWPSelomertoPenggunaanTanah_4_0,
+        });
+        bounds_group.addLayer(layer_PersilWPSelomertoPenggunaanTanah_4);
+        map.addLayer(layer_PersilWPSelomertoPenggunaanTanah_4);
+        setBounds();
+        map.addControl(new L.Control.Search({
+            layer: layer_PersilWPSelomertoPenggunaanTanah_4,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'tipehak'}));
+        document.getElementsByClassName('search-button')[0].className +=
+         ' fa fa-binoculars';
+
+        var overlayMaps = {
+            "Batas Desa": layer_ADM_DESA_SELO_2,
+            "Batas WP": layer_ADM_PERKOTAAN11_SELO_3,
+            "Bidang Tanah": layer_PersilWPSelomertoPenggunaanTanah_4,
+        };
+
+        L.control.layers(null, overlayMaps).addTo(map);
+
+         // Pencarian fitur
+         document.getElementById('search-input').addEventListener('input', function(e) {
+            var searchText = e.target.value.toLowerCase();
+            var featureInfo = document.getElementById('feature-info');
+            featureInfo.innerHTML = '';
+            if (searchText.length > 0) {
+                // Pencarian dalam popups
+                [layer_ADM_DESA_SELO_2, layer_ADM_PERKOTAAN11_SELO_3, layer_PersilWPSelomertoPenggunaanTanah_4].forEach(function(layer) {
+                    layer.eachLayer(function(featureLayer) {
+                        var properties = featureLayer.feature.properties;
+                        var propertyValues = Object.values(properties).map(function(value) {
+                            return value.toString().toLowerCase();
+                        });
+                        if (propertyValues.some(function(value) {
+                            return value.includes(searchText);
+                        })) {
+                            var popupContent = '<table class="popup-table">';
+                            for (var propertyName in properties) {
+                                if (properties.hasOwnProperty(propertyName)) {
+                                    popupContent += '<tr><td>' + propertyName + '</td><td>' + autolinker.link(properties[propertyName].toLocaleString()) + '</td></tr>';
+                                }
+                            }
+                            popupContent += '</table>';
+                            featureInfo.innerHTML += popupContent;
+                        }
+                    });
+                });
+            }
+        });
+
+        </script>
+    </body>
+</html>
